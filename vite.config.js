@@ -15,4 +15,9 @@ export default defineConfig({
   plugins: [react(),
       viteCompression()
   ],
+  resolve: {
+    alias: {
+      '@': '/src', // Maps '@' to your 'src' directory
+    },
+  },
 })

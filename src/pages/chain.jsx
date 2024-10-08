@@ -1,5 +1,5 @@
-import ChartComponent from '../components/ChartComponent.jsx';
-import {format_height,abbreviate} from '../util.js'
+import ChartComponent from '@/components/ChartComponent.jsx';
+import {format_height,abbreviate} from '@/util.js'
 function Chain({client, chain}) {
             console.log(chain.blocks);
     return (
