@@ -3,15 +3,15 @@ import {format_height,abbreviate} from '@/util.js'
 function Chain({client, chain}) {
             console.log(chain.blocks);
     return (
-        <div>
+        <div className=''>
             <h1 className="my-4 text-4xl font-extrabold leading-none tracking-tight text-gray-900 md:text-5xl lg:text-6xl">Chain</h1>
             <h2 className="mb-2 text-2xl font-semibold leading-none tracking-tight text-gray-800 md:text-3xl lg:text-4xl">Latest blocks</h2>
-            <div className="flex">
+            <div className="flex flex-wrap">
 
         {
             chain.blocks.map(({body,header,height})=>(
 
-                <div key={header.hash} className="max-w-64 p-3 bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
+                <div key={header.hash} className="max-w-64 p-3 bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 ">
                     <div className="inline-flex justify-center w-full">
                         <span className="px-2 py-0.5 text-xs font-medium tracking-wide text-yellow-600 bg-yellow-100 rounded-full">Block {format_height(height)}</span>
                         <span className="px-2 py-0.5 ml-auto text-xs font-medium tracking-wide text-gray-500">5s ago</span>

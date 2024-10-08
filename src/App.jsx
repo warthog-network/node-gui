@@ -45,7 +45,7 @@ function App() {
             <div>
                 <Sidebar connections={connections} chain={chain} />
 
-                <div className="fixed top-0 left-56 bg-white w-3/4 h-full border-r">
+                <div className="relative top-0 left-56 bg-white w-3/4 h-full border-r">
                     <div className="p-10">
                         <Routes>
                             <Route path="/" element={<Overview connections={connections} chain={chain} />} />
