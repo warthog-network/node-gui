@@ -42,10 +42,10 @@ function App() {
 
     if (connected && chain) {
         return (
-            <div>
+            <div className='flex flexcol'>
                 <Sidebar connections={connections} chain={chain} />
 
-                <div className="relative top-0 left-56 bg-white w-3/4 h-full border-r">
+                <div className="relative top-0 left-50 bg-white w-3/4 h-full border-r">
                     <div className="p-10">
                         <Routes>
                             <Route path="/" element={<Overview connections={connections} chain={chain} />} />
