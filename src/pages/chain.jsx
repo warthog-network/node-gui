@@ -1,7 +1,7 @@
 import ChartComponent from '@/components/ChartComponent.jsx';
 import {format_height,abbreviate} from '@/util.js'
 function Chain({client, chain}) {
-            console.log(chain.blocks);
+            console.log("blocks: ",chain.blocks);
     return (
         <div className=''>
             <h1 className="my-4 text-4xl font-extrabold leading-none tracking-tight text-gray-900 md:text-5xl lg:text-6xl">Chain</h1>
@@ -9,11 +9,11 @@ function Chain({client, chain}) {
             <div className="flex flex-wrap">
 
         {
-            chain.blocks.map(({body,header,height})=>(
+            chain.blocks.map((block)=>(
 
-                <div key={header.hash} className="max-w-64 p-3 bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 ">
+                <div key={block.header.hash} className="max-w-64 p-3 bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
                     <div className="inline-flex justify-center w-full">
-                        <span className="px-2 py-0.5 text-xs font-medium tracking-wide text-yellow-600 bg-yellow-100 rounded-full">Block {format_height(height)}</span>
+                        <span className="px-2 py-0.5 text-xs font-medium tracking-wide text-yellow-600 bg-yellow-100 rounded-full">Block {format_height(block.height)}</span>
                         <span className="px-2 py-0.5 ml-auto text-xs font-medium tracking-wide text-gray-500">5s ago</span>
 
                     </div>
@@ -21,19 +21,19 @@ function Chain({client, chain}) {
                         <tbody className="divide-y divide-gray-200 dark:divide-neutral-700">
                             <tr>
                                 <th scope="col" className="px-3 py-1 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-500">Hash</th>
-                                <td className="px-3 py-1 text-sm text-end text-gray-800 dark:text-neutral-200 lowercase whitespace-pre">{abbreviate(header.hash)}</td>
+                                <td className="px-3 py-1 text-sm text-end text-gray-800 dark:text-neutral-200 lowercase whitespace-pre">{abbreviate(block.header.hash)}</td>
                             </tr>
                             <tr>
                                 <th scope="col" className="px-3 py-1 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-500">Miner</th>
-                                <td className="px-3 py-1 whitespace-nowrap text-sm text-end text-gray-800 dark:text-neutral-200">{abbreviate(body.rewards[0].toAddress)}</td>
+                                <td className="px-3 py-1 whitespace-nowrap text-sm text-end text-gray-800 dark:text-neutral-200">{abbreviate(block.miner())}</td>
                             </tr>
                             <tr>
                                 <th scope="col" className="px-3 py-1 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-500">Reward</th>
-                                <td className="px-3 py-1 whitespace-nowrap text-sm text-end text-gray-800 dark:text-neutral-200">3.00000109</td>
+                                <td className="px-3 py-1 whitespace-nowrap text-sm text-end text-gray-800 dark:text-neutral-200">{block.reward()}</td>
                             </tr>
                             <tr>
                                 <th scope="col" className="px-3 py-1 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-500">#TXS</th>
-                                <td className="px-3 py-1 whitespace-nowrap text-sm text-end text-gray-800 dark:text-neutral-200">10</td>
+                                <td className="px-3 py-1 whitespace-nowrap text-sm text-end text-gray-800 dark:text-neutral-200">{block.transactionCount()}</td>
                             </tr>
                         </tbody>
                     </table>

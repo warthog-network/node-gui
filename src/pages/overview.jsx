@@ -1,10 +1,13 @@
-
-function Overview({chain, connections}) {
+import { H1 } from '../components/misc.jsx'
+function Overview({ chain, connections }) {
     return (
         <div>
-            <h1 className="my-4 text-4xl font-extrabold leading-none tracking-tight text-gray-800 md:text-5xl lg:text-6xl">Overview</h1>
+            <p className="bg-gradient-to-tr font-extrabold from-green-50 to-black  text-yellow-50 text-left h-52">
+                Hi
+            </p>
+            <H1>Overview</H1>
             <div className="flex">
-                <div className="p-3 max-w-64 border border-gray-200 rounded">
+                <div className="p-3 border border-gray-200 rounded">
                     <div className="flex justify-center">
                         <span className="text-xs text-center text-gray-500">
                             Chain

@@ -22,7 +22,7 @@ class WSClient {
         this.reconnectOnClose = false;
         if (this.timer != null)
             clearTimeout(this.timer);
-        this.ws.disconnect();
+        this.ws.close();
     }
 
     #send_json(json) {
@@ -39,14 +39,14 @@ class WSClient {
     onOpen() {
         console.log('WebSocket connection established');
         this.callbacks.onOpen();
-        this.callbacks.onEvent({ eventName: "api.connected" });
+        this.callbacks.onEvent({ event: null, type: "api.connected" });
         this.reconnectAttempts = 0;
     }
 
     onClose() {
         console.log('WebSocket connection closed');
         this.callbacks.onClose();
-        this.callbacks.onEvent({ eventName: "api.disconnected" });
+        this.callbacks.onEvent({ event: null, type: "api.disconnected" });
         if (this.reconnectOnClose)
             this.reconnect();
     }
@@ -70,6 +70,7 @@ class WSClient {
 
         this.timer = setTimeout(() => {
             this.reconnectAttempts++;
+            console.error("try reconnect connect", this.reconnectAttempts)
             this.connect();
             this.timer = null;
         }, delay);
@@ -93,27 +94,64 @@ class ConnectionState {
         this.connections = this.connections.filter(item => item.id !== id);
     }
 }
+class Block {
+    constructor(data) {
+        Object.assign(this, data);
+    }
+    reward_tx() {
+        return this.body.rewards[0];
+    }
+    miner() {
+        return this.reward_tx().toAddress
+    }
+    transactionCount() {
+        return this.body.transfers.length + 1
+    }
+    reward() {
+        return this.reward_tx().amount;
+    }
+
+
+}
 class ChainState {
     constructor() {
         this.blocks = [];
         this.head = null
     }
     blocks() {
-        return this.blocks;
+        return this.blocks.map((data) => new Block(data));
     }
     latest() {
         return blocks()[-1]
     }
     setState({ latestBlocks, head }) {
         this.head = head;
-        this.blocks = latestBlocks
+        this.blocks = latestBlocks.map((data) => new Block(data));
     }
     append({ newBlocks, head }) {
         this.head = head;
-        this.blocks.concat(newBlocks)
+        console.log("newBlocks", newBlocks)
+        this.blocks.concat(newBlocks.map((data) => new Block(data)))
     }
     fork({ latestBlocks, head }) {
         setState({ latestBlocks, head });
+    }
+}
+
+class LogState{
+    constructor() {
+        this.lines = [];
+    }
+    add_line(line){
+        this.lines.push(line);
+        if (this.lines.length > 1100) {
+            this.lines = this.lines.slice(100);
+        }
+    }
+    add_lines(lines){
+        for (let i = 0, len = lines.length; i < len; i++) {
+            this.add_line(lines[i]);
+        }
     }
 }
 
@@ -122,9 +160,11 @@ class State {
         this.callbacks = callbacks;
         this.connectionState = new ConnectionState();
         this.chainState = new ChainState();
+        this.logState = new LogState();
     }
-    onEvent(event) {
-        switch (event.eventName) {
+    onEvent(msg) {
+        var event = msg.event;
+        switch (msg.type) {
             case 'connection.state':
                 this.connectionState.setState(event.connections);
                 this.callbacks.onConnectionsChanged(this.connectionState.data());
@@ -149,8 +189,20 @@ class State {
                 this.chainState.fork(event)
                 this.callbacks.onChainChanged(this.chainState);
                 break;
+            case 'log.state':
+                this.logState.add_lines(event)
+                this.callbacks.onLogChanged(this.logState.lines);
+                break;
+            case 'log.line':
+                this.logState.add_line(event)
+                this.callbacks.onLogChanged(this.logState.lines);
+                break;
+            case 'api.connected':
+                break;
+            case 'api.disconnected':
+                break;
             default:
-                console.warn('Unknown event name', event.eventName);
+                console.warn('Unknown event type', msg.type, msg);
         }
     }
 }
@@ -165,6 +217,7 @@ class APIClient {
                 this.wsClient
                 this.subscribe('connection');
                 this.subscribe('chain');
+                this.subscribe('log');
                 this.callbacks.onOpen();
             },
             onClose: () => {
@@ -209,7 +262,8 @@ class APIClient {
         return this.get(`/peers/disconnect/${id}`)
     }
     closeConnection() {
-        this.wsClient.disconnect();
+        console.log("disconnect");
+        // this.wsClient.disconnect();
     }
 }
 
