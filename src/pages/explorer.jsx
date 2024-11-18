@@ -1,10 +1,10 @@
 import ChartComponent from '@/components/ChartComponent.jsx';
+import {H1} from '@/components/misc.jsx'
 import {format_height,abbreviate} from '@/util.js'
-function Chain({client, chain}) {
-            console.log("blocks: ",chain.blocks);
+function Explorer({client, chain}) {
     return (
         <div className=''>
-            <h1 className="my-4 text-4xl font-extrabold leading-none tracking-tight text-gray-900 md:text-5xl lg:text-6xl">Chain</h1>
+        <H1>Explorer</H1>
             <h2 className="mb-2 text-2xl font-semibold leading-none tracking-tight text-gray-800 md:text-3xl lg:text-4xl">Latest blocks</h2>
             <div className="flex flex-wrap">
 
@@ -53,4 +53,4 @@ function Chain({client, chain}) {
     )
 }
 
-export default Chain
+export default Explorer

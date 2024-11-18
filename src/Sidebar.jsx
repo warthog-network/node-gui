@@ -3,7 +3,7 @@ import { format_height } from './util.js'
 
 function Sidebar({ chain, connections }) {
     return (
-        <div className="z-50 fixed w-52 flex flex-col top-0 left-0 bg-black text-gray-800 h-full border-r">
+        <div className="z-50 fixed w-56 flex flex-col top-0 left-0 bg-black text-gray-800 h-full border-r">
             <div className=" items-center justify-center h-14 border-b border-zinc-600">
             </div>
             <div className="overflow-y-auto overflow-x-hidden flex-grow bg-zinc-900 text-gray-500 ">
@@ -16,15 +16,6 @@ function Sidebar({ chain, connections }) {
                             <span className="mx-2 text-sm tracking-wide truncate">Overview</span>
                         </span>
                     </Link></li>
-                    <li><Link to="/chain">
-                        <span href="#" className="relative flex flex-row items-center h-11 focus:outline-none hover:bg-zinc-200 hover:text-gray-800 border-l-4 border-transparent hover:border-yellow-500 pr-6">
-                            <span className="inline-flex justify-center items-center ml-4">
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeWidth="2" strokeLinecap="butt" strokeLinejoin="miter" d="m-1,13v1h5v-1m-5,-2v-1h5v1m13.5,2v1h5v-3m-5,0v-1h5v1m-10,1h6m-10,1v1h5v-1m-5,-2v-1h5v1m-10,1h6"></path></svg>
-                            </span>
-                            <span className="mx-2 text-sm tracking-wide truncate">Chain</span>
-                            <span className="px-2 py-0.5 ml-auto text-xs font-medium tracking-wide text-yellow-600 bg-yellow-100 rounded-full">{format_height(chain.head.height)}</span>
-                        </span>
-                    </Link></li>
                     <li><Link to="/explorer">
                         <span href="#" className="relative flex flex-row items-center h-11 focus:outline-none hover:bg-zinc-200 hover:text-gray-800 border-l-4 border-transparent hover:border-yellow-500 pr-6">
                             <span className="inline-flex justify-center items-center ml-4">
@@ -33,6 +24,7 @@ function Sidebar({ chain, connections }) {
                                 </svg>
                             </span>
                             <span className="mx-2 text-sm tracking-wide truncate">Explorer</span>
+                            <span className="px-2 py-0.5 ml-auto text-xs font-medium tracking-wide text-yellow-600 bg-yellow-100 rounded-full">{format_height(chain.head.height)}</span>
                         </span>
                     </Link></li>
                     <li><Link to="/peers">
@@ -60,16 +52,6 @@ function Sidebar({ chain, connections }) {
                             </span>
                             <span className="mx-2 text-sm tracking-wide truncate">DeFi 2.0</span>
                             <span className=" px-2 py-0.5 ml-auto text-xs font-medium tracking-wide text-yellow-600 ">Soon</span>
-                        </span>
-                    </Link></li>
-                    <li><Link to="/health">
-                        <span href="#" className="relative flex flex-row items-center h-11 focus:outline-none hover:bg-zinc-200 hover:text-gray-800 border-l-4 border-transparent hover:border-yellow-500 pr-6">
-                            <span className="inline-flex justify-center items-center ml-4">
-                                <svg className="w-5 h-5" fill="currentColor" version="1.1" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="none" stroke="currentColor" d="M 8,15.5147 C 10,22 15,20.540792 17,18 c 2,-2.486672 2,-6.348405 2,-8.97014 m -15,-5 V 12 c 0,1.6733 1.35651,3.0299 3.02986,3.0299 H 9.47138 C 10.8679,15.0299 12,13.8978 12,12.5012 V 4.02986" strokeWidth="2" /><g fillRule="evenodd"><circle cx="19" cy="8.03" r="3" style={{ stroke: 'none' }} /><circle cx="5" cy="4.37" r="2" style={{ stroke: 'none' }} /><circle cx="11" cy="4.37" r="2" style={{ stroke: 'none' }} /></g></svg>
-
-                            </span>
-                            <span className="mx-2 text-sm tracking-wide truncate">Health Check</span>
-                            <span className=" px-2 py-0.5 ml-auto text-xs font-medium tracking-wide text-red-600 bg-red-200 rounded-full">!</span>
                         </span>
                     </Link></li>
                     <li><Link to="/logs">

@@ -8,7 +8,6 @@ const ChartComponent = ({ client }) => {
 
 
     useEffect(() => {
-        console.log("use effect")
         const handleResize = () => {
             chart.applyOptions({ width: chartContainerRef.current.clientWidth });
         };
@@ -27,7 +26,6 @@ const ChartComponent = ({ client }) => {
                 const str2 = `/chain/hashrate/chart/time/${fromSeconds}/${toSeconds}/${granularity}`;
                 const json = await client.get(str2);
 
-                console.log("json", json);
                 // Format the data as expected by Lightweight Charts
                 const formattedData = json.data.chart.map(item => ({
                     time: item.timestamp,

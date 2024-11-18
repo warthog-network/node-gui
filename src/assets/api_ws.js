@@ -81,11 +81,8 @@ class ConnectionState {
     constructor() {
         this.connections = [];
     }
-    data() {
-        return this.connections;
-    }
-    setState(state) {
-        this.connections = state;
+    setConnections(conns) {
+        this.connections = conns;
     }
     addConnection(newConnection) {
         this.connections.push(newConnection)
@@ -94,6 +91,7 @@ class ConnectionState {
         this.connections = this.connections.filter(item => item.id !== id);
     }
 }
+
 class Block {
     constructor(data) {
         Object.assign(this, data);
@@ -110,9 +108,8 @@ class Block {
     reward() {
         return this.reward_tx().amount;
     }
-
-
 }
+
 class ChainState {
     constructor() {
         this.blocks = [];
@@ -138,94 +135,125 @@ class ChainState {
     }
 }
 
-class LogState{
+class LogState {
     constructor() {
         this.lines = [];
     }
-    add_line(line){
+    addLine(line) {
         this.lines.push(line);
         if (this.lines.length > 1100) {
             this.lines = this.lines.slice(100);
         }
     }
-    add_lines(lines){
+    setLines(lines) {
+        this.lines = []
         for (let i = 0, len = lines.length; i < len; i++) {
-            this.add_line(lines[i]);
+            this.addLine(lines[i]);
         }
     }
 }
 
 class State {
-    constructor(callbacks) {
-        this.callbacks = callbacks;
-        this.connectionState = new ConnectionState();
-        this.chainState = new ChainState();
-        this.logState = new LogState();
+    constructor() {
+        this.connection = new ConnectionState();
+        this.chain = new ChainState();
+        this.log = new LogState();
+        this.subscribed = false;
     }
     onEvent(msg) {
         var event = msg.event;
         switch (msg.type) {
             case 'connection.state':
-                this.connectionState.setState(event.connections);
-                this.callbacks.onConnectionsChanged(this.connectionState.data());
-                break;
+                this.connection.setConnections(event.connections);
+                return 'connection';
             case 'connection.add':
-                this.connectionState.addConnection(event.connection);
-                this.callbacks.onConnectionsChanged(this.connectionState.data());
-                break;
+                this.connection.addConnection(event.connection);
+                return 'connection';
             case 'connection.remove':
-                this.connectionState.removeConnection(event.id);
-                this.callbacks.onConnectionsChanged(this.connectionState.data());
-                break;
+                this.connection.removeConnection(event.id);
+                // return ['connection', this.connectionState.get_state];
+                return 'connection';
             case 'chain.state':
-                this.chainState.setState(event)
-                this.callbacks.onChainChanged(this.chainState);
-                break;
+                this.chain.setState(event)
+                return 'chain';
             case 'chain.append':
-                this.chainState.append(event);
-                this.callbacks.onChainChanged(this.chainState);
-                break;
+                this.chain.append(event);
+                return 'chain';
             case 'chain.fork':
-                this.chainState.fork(event)
-                this.callbacks.onChainChanged(this.chainState);
-                break;
+                this.chain.fork(event)
+                return 'chain';
             case 'log.state':
-                this.logState.add_lines(event)
-                this.callbacks.onLogChanged(this.logState.lines);
-                break;
+                this.log.setLines(event)
+                return 'log'
             case 'log.line':
-                this.logState.add_line(event)
-                this.callbacks.onLogChanged(this.logState.lines);
-                break;
+                this.log.addLine(event)
+                return 'log'
             case 'api.connected':
-                break;
+                this.subscribed = true;
+                return 'subscribed';
             case 'api.disconnected':
-                break;
+                this.subscribed = false;
+                return 'subscribed';
             default:
                 console.warn('Unknown event type', msg.type, msg);
+                return ['', null];
         }
     }
 }
 
 class APIClient {
-    constructor(callbacks) {
+    constructor() {
         this.hostport = '127.0.0.1:3000'
-        this.callbacks = callbacks
-        this.state = new State(callbacks)
+        this.setters = null
+        this.state = new State()
+        this.notifyChange = (key) => {
+            console.log('notifyChange', key)
+            if (this.setters != null) {
+                switch (key) {
+                    case 'connection':
+                        this.setters.setConnections([...this.connectionState().connections]);
+                        break;
+                    case 'chain':
+                        this.setters.setChain({...this.chainState()});
+                        break;
+                    case 'log':
+                        this.setters.setLog({...this.logState()});
+                        break;
+                    case 'subscribed':
+                        this.setters.setSubscribed(this.subscribedState());
+                        break;
+                }
+            }
+        }
         this.wsClient = new WSClient('ws://' + this.hostport + '/stream', {
             onOpen: () => {
                 this.wsClient
                 this.subscribe('connection');
                 this.subscribe('chain');
                 this.subscribe('log');
-                this.callbacks.onOpen();
             },
             onClose: () => {
-                this.callbacks.onClose();
+                this.state.subscribed = false;
+                return 'subscribed';
             },
-            onEvent: this.state.onEvent.bind(this.state)
+            onEvent: (event) => {
+                var key = this.state.onEvent(event)
+                this.notifyChange(key);
+            }
         })
         this.wsClient.connect();
+    }
+    connectionState() {
+        return this.state.connection;
+    }
+    chainState() {
+        return this.state.chain;
+    }
+    logState() {
+        return this.state.log;
+    }
+    subscribedState() {
+        return this.state.subscribed;
     }
 
     subscribe(topic, params) {
