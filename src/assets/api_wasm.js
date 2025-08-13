@@ -28,7 +28,7 @@ const setStatus = text =>
 	// 	if (!text) spinnerElement.style.display = 'none';
 	// }
 
-	statusElement.innerHTML = text;
+	// statusElement.innerHTML = text;
 };
 
 let totalDependencies = 0;
