@@ -6,7 +6,7 @@ import Peers from './pages/peers.jsx'
 import Explorer from './pages/explorer.jsx'
 import Logs from './pages/logs.jsx'
 import Info from './pages/info.jsx'
-import APIClient from './assets/api_ws.js'
+import APIClient from './assets/api_wasm.js'
 import './App.css'
 
 import React from 'react';
