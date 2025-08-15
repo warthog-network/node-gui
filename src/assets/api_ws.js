@@ -28,6 +28,9 @@ class WSClient {
     #send_json(json) {
         this.ws.send(JSON.stringify(json));
     }
+    send(json) {
+        this.#send_json(json);
+    }
     msg(action, topic, params) {
         var msg = { action: action, topic: topic }
         if (params) {
@@ -108,6 +111,9 @@ class Block {
     reward() {
         return this.reward_tx().amount;
     }
+    get transactions() {
+        return [this.reward_tx(), ...this.body.transfers];
+    }
 }
 
 class ChainState {
@@ -116,10 +122,10 @@ class ChainState {
         this.head = null
     }
     blocks() {
-        return this.blocks.map((data) => new Block(data));
+        return this.blocks;
     }
     latest() {
-        return blocks()[-1]
+        return this.blocks[this.blocks.length - 1]
     }
     setState({ latestBlocks, head }) {
         this.head = head;
@@ -128,10 +134,10 @@ class ChainState {
     append({ newBlocks, head }) {
         this.head = head;
         console.log("newBlocks", newBlocks)
-        this.blocks.concat(newBlocks.map((data) => new Block(data)))
+        this.blocks = this.blocks.concat(newBlocks.map((data) => new Block(data)))
     }
     fork({ latestBlocks, head }) {
-        setState({ latestBlocks, head });
+        this.setState({ latestBlocks, head });
     }
 }
 
@@ -200,14 +206,13 @@ class State {
         }
     }
 }
-
 class APIClient {
     constructor() {
-        this.hostport = '127.0.0.1:3000'
-        this.setters = null
-        this.state = new State()
+        this.hostport = 'localhost:3000';
+        this.setters = null;
+        this.state = new State();
         this.notifyChange = (key) => {
-            console.log('notifyChange', key)
+            console.log('notifyChange', key);
             if (this.setters != null) {
                 switch (key) {
                     case 'connection':
@@ -224,23 +229,21 @@ class APIClient {
                         break;
                 }
             }
-        }
+        };
         this.wsClient = new WSClient('ws://' + this.hostport + '/stream', {
             onOpen: () => {
-                this.wsClient
                 this.subscribe('connection');
                 this.subscribe('chain');
                 this.subscribe('log');
             },
             onClose: () => {
                 this.state.subscribed = false;
-                return 'subscribed';
             },
-            onEvent: (event) => {
-                var key = this.state.onEvent(event)
+            onEvent: (msg) => {
+                var key = this.state.onEvent(msg);
                 this.notifyChange(key);
             }
-        })
+        });
         this.wsClient.connect();
     }
     connectionState() {
@@ -255,44 +258,51 @@ class APIClient {
     subscribedState() {
         return this.state.subscribed;
     }
-
     subscribe(topic, params) {
-        this.wsClient.msg("subscribe", topic, params)
+        this.wsClient.msg("subscribe", topic, params);
     }
     unsubscribe(topic, params) {
-        this.wsClient.msg("unsubscribe", topic, params)
+        this.wsClient.msg("unsubscribe", topic, params);
     }
     get(path) {
         return new Promise((resolve) => {
             var url = 'http://' + this.hostport + path;
-            console.log("GET", url)
+            console.log("GET", url);
             fetch(url).then((res) => res.json())
                 .then((json) => {
-                    resolve(json)
-                })
+                    resolve(json);
+                });
         });
     }
     post(path, params) {
         return new Promise((resolve) => {
             var url = 'http://' + this.hostport + path;
-            console.log("POST", url)
+            console.log("POST", url);
             fetch(url, {
                 method: "POST",
                 body: JSON.stringify(params),
             }).then((res) => res.json())
                 .then((json) => {
-                    resolve(json)
-                })
+                    resolve(json);
+                });
         });
     }
-
     disconnect(id) {
-        return this.get(`/peers/disconnect/${id}`)
+        return this.get(`/peers/disconnect/${id}`);
     }
     closeConnection() {
         console.log("disconnect");
         // this.wsClient.disconnect();
     }
+  getBlock(height) {
+    return this.get(`/chain/block/${height}`).then(response => {
+        if (response.code !== 0 || !response.data || !response.data.header) {
+            throw new Error('Block not found');
+        }
+        const data = response.data;
+        return new Block({ ...data, height: Number(height) });
+    });
 }
-
+}
+export { Block };
 export default APIClient;
