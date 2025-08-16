@@ -5,6 +5,7 @@ import Overview from './pages/overview.jsx';
 import Peers from './pages/peers.jsx';
 import Explorer from './pages/explorer.jsx';
 import Logs from './pages/logs.jsx';
+import TransactionDetails from './pages/TransactionDetails.jsx'
 import BlockDetails from './pages/blockdetails.jsx';
 import Info from './pages/info.jsx';
 import APIClient from './assets/api_ws.js';
@@ -46,7 +47,9 @@ function App() {
                         <Route path="/peers" element={<Peers client={client} connections={connections} />} />
                         <Route path="/logs" element={<Logs log={log} />} />
                         <Route path="/info" element={<Info client={client} />} />
-                        <Route path="/wallet" element={<Wallet  />} /> {/* chain optional if needed for UI */}                        <Route path="/chain/block/:height" element={<BlockDetails client={client} chain={chain} />} />
+                        <Route path="/wallet" element={<Wallet  />} /> {/* chain optional if needed for UI */}        
+                        <Route path="/transaction/lookup/:txid" element={<TransactionDetails client={client} />} />                   
+                        <Route path="/chain/block/:height" element={<BlockDetails client={client} chain={chain} />} />
                     </Routes>
                 </div>
             </div>

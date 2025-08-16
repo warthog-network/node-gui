@@ -105,9 +105,11 @@ class Block {
 }
 
 class ChainState {
-    constructor() {
+    constructor(apiClient) {
+        this.apiClient = apiClient; // Reference to APIClient for fetching hashrate
         this.blocks = [];
-        this.head = null
+        this.head = null;
+        this.hashrate = null; // New property for hashrate
     }
     blocks() {
         return this.blocks;
@@ -115,16 +117,28 @@ class ChainState {
     latest() {
         return this.blocks[this.blocks.length - 1]
     }
-    setState({ latestBlocks, head }) {
+    async updateHashrate() {
+        try {
+            const response = await this.apiClient.get('/chain/hashrate/100');
+            this.hashrate = response.data.lastNBlocksEstimate || null;
+        } catch (err) {
+            console.error('Failed to fetch hashrate:', err);
+            this.hashrate = null;
+        }
+    }
+    async setState({ latestBlocks, head }) {
         this.head = head;
         this.blocks = latestBlocks.map((data) => new Block(data));
+        await this.updateHashrate(); // Fetch hashrate on state set
     }
-    append({ newBlocks, head }) {
+    async append({ newBlocks, head }) {
         this.head = head;
         this.blocks = this.blocks.concat(newBlocks.map((data) => new Block(data)))
+        await this.updateHashrate(); // Fetch hashrate on append
     }
-    fork({ latestBlocks, head }) {
+    async fork({ latestBlocks, head }) {
         this.setState({ latestBlocks, head });
+        await this.updateHashrate(); // Fetch hashrate on fork
     }
 }
 
@@ -147,9 +161,9 @@ class LogState {
 }
 
 class State {
-    constructor() {
+    constructor(apiClient) {
         this.connection = new ConnectionState();
-        this.chain = new ChainState();
+        this.chain = new ChainState(apiClient); // Pass apiClient to ChainState
         this.log = new LogState();
         this.subscribed = false;
     }
@@ -206,7 +220,7 @@ class APIClient {
         
         this.proxyUrl = proxyUrl; // e.g., '/api/proxy' for dev CORS bypass
         
-        this.state = new State();
+        this.state = new State(this); // Pass this (APIClient) to State for ChainState
         this.setters = null;
         
         this.wsClient = new WSClient(this.wsUrl, {

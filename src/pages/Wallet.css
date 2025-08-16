@@ -3,15 +3,14 @@
 .container {
   max-width: 800px;
   margin: 0 auto;
-  background-color: #817a7a;
+background: radial-gradient(circle at 24.1% 68.8%, rgb(50, 50, 50) 0%, rgb(0, 0, 0) 99.4%);
   color: #FFFFFF;
   font-family: 'Roboto', sans-serif;
   padding: 20px;
   min-height: 100vh;
-  max-width: 800px;
-  margin: 0 auto;
-  border: 3px solid #FFC107;
-  box-shadow: 0 0 10px #FFC107;
+  border-radius: 3rem;
+ 
+
   overflow-x: hidden;
   box-sizing: border-box;
 }

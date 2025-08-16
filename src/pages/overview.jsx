@@ -1,89 +1,147 @@
 import { useEffect, useState } from 'react'
 import { format_hash, H1 } from '../components/misc.jsx'
-function Overview({ chain, connections, client }) {
 
-    var [hashrate, setHashrate] = useState(null)
-    useEffect(
-        () => {
-            let mounted = true
-            client.get('/chain/hashrate/100').then(
-                ({ data }) => {
-                    if (mounted)
-                        setHashrate(data.lastNBlocksEstimate);
-                },
-                (err) => { console.error(err) }
-            );
-            return () => { mounted = false }
-        }, []
-    )
-    if (hashrate) {
-        return (
-            <div>
-                <p className="bg-gradient-to-tr font-extrabold from-green-50 to-black  text-yellow-50 text-left h-52">
-                    Hi
-                </p>
-                <H1>Overview</H1>
-                <div className="flex">
-                    <div className="p-3 border border-gray-200 rounded">
-                        <div className="flex justify-center">
-                            <span className="text-xs text-center text-gray-500">
-                                Chain
-                            </span>
+const LOGO_SRC = 'https://pbs.twimg.com/profile_images/1739991331252879360/HM1JGzf8.jpg';
+
+function Overview({ chain, connections, client }) {
+    const [banned, setBanned] = useState(0);
+    const [pinned, setPinned] = useState(20); // Fallback to hardcoded default
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        let mounted = true;
+        setLoading(true);
+
+        const fetchData = async () => {
+            try {
+                const bannedRes = await client.get('/peers/banned').catch(err => {
+                    console.error('Banned fetch error:', err);
+                    return null;
+                });
+                const endpointsRes = await client.get('/peers/endpoints').catch(err => {
+                    console.error('Endpoints fetch error:', err);
+                    return null;
+                });
+
+                if (mounted) {
+                    if (bannedRes && bannedRes.data && bannedRes.data.data) {
+                        setBanned(bannedRes.data.data.length || 0);
+                    }
+                    if (endpointsRes && endpointsRes.data && endpointsRes.data.data) {
+                        setPinned(endpointsRes.data.data.length || 20);
+                    }
+                }
+            } catch (err) {
+                if (mounted) {
+                    console.error('General fetch error:', err);
+                }
+            } finally {
+                if (mounted) setLoading(false);
+            }
+        };
+
+        fetchData();
+
+        return () => { mounted = false; };
+    }, [client]);
+
+    // Assuming default listen ports for outbound connections
+    const defaultPorts = [9186, 19110];
+    const outbound = connections.filter(c => defaultPorts.includes(c.connection?.port)).length;
+    const inbound = connections.length - outbound;
+
+    // Hashrate is now part of chain state (fetched on chain updates via WS events)
+    const hashrate = chain.hashrate;
+
+    if (loading) {
+        return <H1>Overview (Loading...)</H1>;
+    }
+
+    return (
+        <div className="p-6 container min-h-screen relative overflow-hidden">
+            <H1 className="text-center mb-8 text-4xl font-bold text-gray-800 dark:text-white relative z-10">Overview</H1>
+            <div className="relative mx-auto w-[400px] h-[400px] max-w-full aspect-square mt-20">
+                <div className="absolute inset-0 animate-rotate-slow">
+                    <div className="absolute top-0 left-1/2 w-64 h-64 -translate-x-1/2 -translate-y-1/2">
+                        <div className="relative w-full h-full rounded-full shadow-2xl overflow-hidden bg-white dark:bg-gray-800 animate-counter-rotate hover:scale-105 transition-transform duration-300">
+                            <img 
+                                src={LOGO_SRC} 
+                                alt="Warthog Network Logo" 
+                                className="absolute inset-0 w-full h-full object-cover opacity-5"
+                            />
+                            <div className="relative z-10 flex flex-col justify-center items-center h-full p-6">
+                                <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-4">Chain</h2>
+                                <dl className="space-y-2 text-center">
+                                    <div>
+                                        <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Length</dt>
+                                        <dd className="text-sm text-gray-900 dark:text-white">{chain.head.height}</dd>
+                                    </div>
+                                    <div>
+                                        <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Work</dt>
+                                        <dd className="text-sm text-gray-900 dark:text-white">{format_hash(chain.head.worksum)}</dd>
+                                    </div>
+                                    <div>
+                                        <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Difficulty</dt>
+                                        <dd className="text-sm text-gray-900 dark:text-white">{format_hash(chain.head.difficulty)}</dd>
+                                    </div>
+                                    <div>
+                                        <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Hashrate</dt>
+                                        <dd className="text-sm text-gray-900 dark:text-white">{hashrate ? `${format_hash(hashrate)}/s` : 'N/A'}</dd>
+                                    </div>
+                                </dl>
+                            </div>
                         </div>
-                        <table className="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
-                            <tbody className="divide-y divide-gray-200 dark:divide-neutral-700">
-                                <tr>
-                                    <th scope="col" className="px-3 py-1 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-500">Length</th>
-                                    <td className="px-3 py-1 text-sm text-end text-gray-800 dark:text-neutral-200 lowercase whitespace-pre">{chain.head.height}</td>
-                                </tr>
-                                <tr>
-                                    <th scope="col" className="px-3 py-1 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-500">Total Work</th>
-                                    <td className="px-3 py-1 whitespace-nowrap text-sm text-end text-gray-800 dark:text-neutral-200">{format_hash(chain.head.worksum)}</td>
-                                </tr>
-                                <tr>
-                                    <th scope="col" className="px-3 py-1 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-500">Difficulty</th>
-                                    <td className="px-3 py-1 whitespace-nowrap text-sm text-end text-gray-800 dark:text-neutral-200">{format_hash(chain.head.difficulty)}</td>
-                                </tr>
-                                <tr>
-                                    <th scope="col" className="px-3 py-1 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-500">Hashrate</th>
-                                    <td className="px-3 py-1 whitespace-nowrap text-sm text-end text-gray-800 dark:text-neutral-200">{format_hash(hashrate)}/s</td>
-                                </tr>
-                            </tbody>
-                        </table>
                     </div>
-                    <div className="p-3 max-w-64 border border-gray-200 rounded">
-                        <div className="flex justify-center">
-                            <span className="text-xs text-center text-gray-500">
-                                Peers
-                            </span>
+                    <div className="absolute bottom-0 left-1/2 w-64 h-64 -translate-x-1/2 translate-y-1/2">
+                        <div className="relative w-full h-full rounded-full shadow-2xl overflow-hidden bg-white dark:bg-gray-800 animate-counter-rotate hover:scale-105 transition-transform duration-300">
+                            <img 
+                                src={LOGO_SRC} 
+                                alt="Warthog Network Logo" 
+                                className="absolute inset-0 w-full h-full object-cover opacity-5"
+                            />
+                            <div className="relative z-10 flex flex-col justify-center items-center h-full p-6">
+                                <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-4">Peers</h2>
+                                <dl className="space-y-2 text-center">
+                                    <div>
+                                        <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Pinned</dt>
+                                        <dd className="text-sm text-gray-900 dark:text-white">{pinned}</dd>
+                                    </div>
+                                    <div>
+                                        <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Outbound</dt>
+                                        <dd className="text-sm text-gray-900 dark:text-white">{outbound}</dd>
+                                    </div>
+                                    <div>
+                                        <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Inbound</dt>
+                                        <dd className="text-sm text-gray-900 dark:text-white">{inbound}</dd>
+                                    </div>
+                                    <div>
+                                        <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Banned</dt>
+                                        <dd className="text-sm text-gray-900 dark:text-white">{banned}</dd>
+                                    </div>
+                                </dl>
+                            </div>
                         </div>
-                        <table className="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
-                            <tbody className="divide-y divide-gray-200 dark:divide-neutral-700">
-                                <tr>
-                                    <th scope="col" className="px-3 py-1 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-500">Pinned</th>
-                                    <td className="px-3 py-1 text-sm text-end text-gray-800 dark:text-neutral-200 lowercase whitespace-pre">20</td>
-                                </tr>
-                                <tr>
-                                    <th scope="col" className="px-3 py-1 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-500">Outbound</th>
-                                    <td className="px-3 py-1 text-sm text-end text-gray-800 dark:text-neutral-200 lowercase whitespace-pre">20</td>
-                                </tr>
-                                <tr>
-                                    <th scope="col" className="px-3 py-1 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-500">Inbound</th>
-                                    <td className="px-3 py-1 whitespace-nowrap text-sm text-end text-gray-800 dark:text-neutral-200">0</td>
-                                </tr>
-                                <tr>
-                                    <th scope="col" className="px-3 py-1 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-500">Banned</th>
-                                    <td className="px-3 py-1 whitespace-nowrap text-sm text-end text-gray-800 dark:text-neutral-200">5</td>
-                                </tr>
-                            </tbody>
-                        </table>
                     </div>
                 </div>
             </div>
-        )
-    }else{
-        return ( <H1>Overview</H1>);
-
-    }
+            <style jsx>{`
+                @keyframes rotate-slow {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
+                .animate-rotate-slow {
+                    animation: rotate-slow 30s linear infinite;
+                }
+                @keyframes counter-rotate {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(-360deg); }
+                }
+                .animate-counter-rotate {
+                    animation: counter-rotate 30s linear infinite;
+                }
+            `}</style>
+        </div>
+    );
 }
+
 export default Overview
