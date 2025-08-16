@@ -208,7 +208,14 @@ class State {
 }
 class APIClient {
     constructor() {
-        this.hostport = 'localhost:3000';
+       const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+    const wsProtocol = backendUrl.startsWith('https') ? 'wss' : 'ws'; // Auto-secure for prod
+    const url = new URL(backendUrl);
+    this.hostport = url.host; // e.g., 'node.wartscan.io' or 'localhost:3000'
+    this.ws = new WebSocket(`${wsProtocol}://${this.hostport}/stream`);
+    this.ws.onopen = () => console.log('WS connected');
+    this.ws.onerror = (err) => console.error('WS error:', err); // Better logging for debug
+    this.ws.onclose = () => console.log('WS closed');
         this.setters = null;
         this.state = new State();
         this.notifyChange = (key) => {
