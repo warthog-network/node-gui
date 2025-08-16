@@ -5,75 +5,63 @@ class WSClient {
         this.callbacks = callbacks;
         this.ws = null;
         this.reconnectAttempts = 0;
-        this.maxReconnectDelay = 5000; // 5 seconds
-        this.initialReconnectDelay = 200; // 1 second
+        this.maxReconnectDelay = 5000;
+        this.initialReconnectDelay = 200;
         this.reconnectOnClose = true;
     }
 
     connect() {
         this.ws = new WebSocket(this.url);
-
         this.ws.addEventListener('open', this.onOpen.bind(this));
         this.ws.addEventListener('close', this.onClose.bind(this));
         this.ws.addEventListener('message', this.onMessage.bind(this));
         this.ws.addEventListener('error', this.onError.bind(this));
     }
+
     disconnect() {
         this.reconnectOnClose = false;
-        if (this.timer != null)
-            clearTimeout(this.timer);
-        this.ws.close();
+        if (this.timer) clearTimeout(this.timer);
+        if (this.ws) this.ws.close();
     }
 
-    #send_json(json) {
-        this.ws.send(JSON.stringify(json));
-    }
     send(json) {
-        this.#send_json(json);
-    }
-    msg(action, topic, params) {
-        var msg = { action: action, topic: topic }
-        if (params) {
-            msg.params = params
+        if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+            this.ws.send(JSON.stringify(json));
         }
-        this.#send_json(msg);
+    }
+
+    msg(action, topic, params) {
+        const msg = { action, topic };
+        if (params) msg.params = params;
+        this.send(msg);
     }
 
     onOpen() {
-        console.log('WebSocket connection established');
         this.callbacks.onOpen();
         this.callbacks.onEvent({ event: null, type: "api.connected" });
         this.reconnectAttempts = 0;
     }
 
     onClose() {
-        console.log('WebSocket connection closed');
         this.callbacks.onClose();
         this.callbacks.onEvent({ event: null, type: "api.disconnected" });
-        if (this.reconnectOnClose)
-            this.reconnect();
+        if (this.reconnectOnClose) this.reconnect();
     }
 
     onMessage(event) {
-        console.log('Websocket message received', JSON.parse(event.data));
-        this.callbacks.onEvent(JSON.parse(event.data))
+        const data = JSON.parse(event.data);
+        this.callbacks.onEvent(data);
     }
 
     onError(error) {
-        console.error('WebSocket error:', error);
+        // Silent error handling; notify via callback
+        this.callbacks.onError(error);
     }
 
     reconnect() {
-        const delay = Math.min(
-            this.initialReconnectDelay * Math.pow(2, this.reconnectAttempts),
-            this.maxReconnectDelay
-        );
-
-        console.log(`Attempting to reconnect in ${delay}ms...`);
-
+        const delay = Math.min(this.initialReconnectDelay * Math.pow(2, this.reconnectAttempts), this.maxReconnectDelay);
         this.timer = setTimeout(() => {
             this.reconnectAttempts++;
-            console.log("try reconnect connect", this.reconnectAttempts)
             this.connect();
             this.timer = null;
         }, delay);
@@ -133,7 +121,6 @@ class ChainState {
     }
     append({ newBlocks, head }) {
         this.head = head;
-        console.log("newBlocks", newBlocks)
         this.blocks = this.blocks.concat(newBlocks.map((data) => new Block(data)))
     }
     fork({ latestBlocks, head }) {
@@ -177,7 +164,6 @@ class State {
                 return 'connection';
             case 'connection.remove':
                 this.connection.removeConnection(event.id);
-                // return ['connection', this.connectionState.get_state];
                 return 'connection';
             case 'chain.state':
                 this.chain.setState(event)
@@ -202,52 +188,72 @@ class State {
                 return 'subscribed';
             default:
                 console.warn('Unknown event type', msg.type, msg);
-                return ['', null];
+                return '';
         }
     }
 }
+
 class APIClient {
-    constructor(backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000') {  // Made backendUrl a param for flexibility
-        const wsProtocol = backendUrl.startsWith('https') ? 'wss' : 'ws';
-        const url = new URL(backendUrl);
-        this.hostport = url.host; // e.g., 'node.wartscan.io' or 'localhost:3000'
-        this.setters = null;
+    constructor(host = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000', useChainDelta = false, proxyUrl = null) {
+        const url = new URL(host);
+        this.host = host; // Full host URL, e.g., 'https://node.wartscan.io'
+        this.hostport = url.host; // Domain:port for WS
+        const wsProtocol = host.startsWith('https') ? 'wss' : 'ws';
+        
+        // Use /ws/chain_delta if flag set (for prod/remote), else /stream
+        const wsPath = useChainDelta ? '/ws/chain_delta' : '/stream';
+        this.wsUrl = `${wsProtocol}://${this.hostport}${wsPath}`;
+        
+        this.proxyUrl = proxyUrl; // e.g., '/api/proxy' for dev CORS bypass
+        
         this.state = new State();
-        this.notifyChange = (key) => {
-            console.log('notifyChange', key);
-            if (this.setters != null) {
-                switch (key) {
-                    case 'connection':
-                        this.setters.setConnections([...this.connectionState().connections]);
-                        break;
-                    case 'chain':
-                        this.setters.setChain({...this.chainState()});
-                        break;
-                    case 'log':
-                        this.setters.setLog({...this.logState()});
-                        break;
-                    case 'subscribed':
-                        this.setters.setSubscribed(this.subscribedState());
-                        break;
-                }
-            }
-        };
-        this.wsClient = new WSClient(`${wsProtocol}://${this.hostport}/stream`, {  // Fixed to use wsProtocol here
+        this.setters = null;
+        
+        this.wsClient = new WSClient(this.wsUrl, {
             onOpen: () => {
-                this.subscribe('connection');
-                this.subscribe('chain');
-                this.subscribe('log');
+                if (!useChainDelta) {
+                    // Only subscribe if using /stream (chain_delta auto-streams)
+                    this.subscribe('connection');
+                    this.subscribe('chain');
+                    this.subscribe('log');
+                }
+                this.state.subscribed = true;
+                this.notifyChange('subscribed');
             },
             onClose: () => {
                 this.state.subscribed = false;
+                this.notifyChange('subscribed');
             },
             onEvent: (msg) => {
-                var key = this.state.onEvent(msg);
+                const key = this.state.onEvent(msg);
                 this.notifyChange(key);
+            },
+            onError: (err) => {
+                console.error('WS error:', err); // Minimal logging
             }
         });
         this.wsClient.connect();
     }
+
+    notifyChange(key) {
+        if (this.setters != null) {
+            switch (key) {
+                case 'connection':
+                    this.setters.setConnections([...this.state.connection.connections]);
+                    break;
+                case 'chain':
+                    this.setters.setChain({...this.state.chain});
+                    break;
+                case 'log':
+                    this.setters.setLog({...this.state.log});
+                    break;
+                case 'subscribed':
+                    this.setters.setSubscribed(this.state.subscribed);
+                    break;
+            }
+        }
+    };
+
     connectionState() {
         return this.state.connection;
     }
@@ -266,45 +272,63 @@ class APIClient {
     unsubscribe(topic, params) {
         this.wsClient.msg("unsubscribe", topic, params);
     }
-    get(path) {
-        return new Promise((resolve) => {
-            var url = 'http://' + this.hostport + path;
-            console.log("GET", url);
-            fetch(url).then((res) => res.json())
-                .then((json) => {
-                    resolve(json);
-                });
-        });
+    async get(path) {
+        let url;
+        if (this.proxyUrl) {
+            // Use proxy for CORS bypass in dev
+            const query = `?nodePath=${encodeURIComponent(path)}&nodeBase=${encodeURIComponent(this.host)}`;
+            url = this.proxyUrl + query;
+        } else {
+            // Direct fetch for prod or local
+            url = this.host.replace(/\/$/, '') + '/' + path.replace(/^\//, '');
+        }
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
     }
-    post(path, params) {
-        return new Promise((resolve) => {
-            var url = 'http://' + this.hostport + path;
-            console.log("POST", url);
-            fetch(url, {
-                method: "POST",
-                body: JSON.stringify(params),
-            }).then((res) => res.json())
-                .then((json) => {
-                    resolve(json);
-                });
+
+    async post(path, params) {
+        let url;
+        const body = JSON.stringify(params);
+        const headers = { 'Content-Type': 'application/json' };
+        if (this.proxyUrl) {
+            // Use proxy for CORS bypass in dev
+            const query = `?nodePath=${encodeURIComponent(path)}&nodeBase=${encodeURIComponent(this.host)}`;
+            url = this.proxyUrl + query;
+        } else {
+            // Direct fetch for prod or local
+            url = this.host.replace(/\/$/, '') + '/' + path.replace(/^\//, '');
+        }
+        const response = await fetch(url, {
+            method: "POST",
+            body,
+            headers
         });
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
     }
+
     disconnect(id) {
         return this.get(`/peers/disconnect/${id}`);
     }
+
     closeConnection() {
-        console.log("disconnect");
-        // this.wsClient.disconnect();
+        this.wsClient.disconnect();
     }
-  getBlock(height) {
-    return this.get(`/chain/block/${height}`).then(response => {
-        if (response.code !== 0 || !response.data || !response.data.header) {
-            throw new Error('Block not found');
-        }
-        const data = response.data;
-        return new Block({ ...data, height: Number(height) });
-    });
+
+    getBlock(height) {
+        return this.get(`/chain/block/${height}`).then(response => {
+            if (response.code !== 0 || !response.data || !response.data.header) {
+                throw new Error('Block not found');
+            }
+            return new Block({ ...response.data, height: Number(height) });
+        });
+    }
 }
-}
+
 export { Block };
 export default APIClient;
