@@ -45,7 +45,36 @@ const Wallet = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [selectedNode, setSelectedNode] = useState(defaultNodeList[4]);
   const [showDownloadPrompt, setShowDownloadPrompt] = useState(false);
+  const [apiPath, setApiPath] = useState(''); 
+  const [apiMethod, setApiMethod] = useState('GET'); 
+  const [apiParams, setApiParams] = useState(''); 
+  const [apiResponse, setApiResponse] = useState(null);
 
+  const handleApiCall = async () => {
+  setError(null);
+  setApiResponse(null);
+  try {
+    const nodeBaseParam = `nodeBase=${encodeURIComponent(selectedNode)}`;
+    const query = `nodePath=${apiPath}&${nodeBaseParam}`;
+    let response;
+    if (apiMethod === 'GET') {
+      response = await axios.get(`${API_URL}?${query}`);
+    } else {
+      const params = JSON.parse(apiParams || '{}');
+      response = await axios.post(`${API_URL}?${query}`, params);
+    }
+    setApiResponse(response.data);
+  } catch (err) {
+    setError(err.message || 'API call failed');
+  }
+};
+const handleClearApi = () => {
+  setApiPath('');
+  setApiMethod('GET');
+  setApiParams('');
+  setApiResponse(null);
+  setError(null);
+};
   useEffect(() => {
     const encryptedWallet = localStorage.getItem('warthogWallet');
     if (encryptedWallet) {
@@ -801,8 +830,49 @@ useEffect(() => {
                 </div>
               )}
             </section>
+            
           )}
-
+<section>
+  <h2>API Explorer</h2>
+  <p>Use this to call any Warthog node endpoint (GET/POST).</p>
+  <div className="form-group">
+    <label>Endpoint Path (e.g., chain/head or transaction/add):</label>
+    <input
+      type="text"
+      value={apiPath}
+      onChange={(e) => setApiPath(e.target.value.trim())}
+      placeholder="Enter path like chain/head"
+      className="input"
+    />
+  </div>
+  <div className="form-group">
+    <label>Method:</label>
+    <select value={apiMethod} onChange={(e) => setApiMethod(e.target.value)}>
+      <option value="GET">GET</option>
+      <option value="POST">POST</option>
+    </select>
+  </div>
+  {apiMethod === 'POST' && (
+    <div className="form-group">
+      <label>Params (JSON):</label>
+      <textarea
+        value={apiParams}
+        onChange={(e) => setApiParams(e.target.value)}
+        placeholder='{"key": "value"}'
+        className="input"
+      />
+    </div>
+  )}
+  <div style={{ display: 'flex', gap: '10px' }}>
+    <button onClick={handleApiCall}>Call API</button>
+    <button onClick={handleClearApi}>Clear</button>
+  </div>
+  {apiResponse && (
+    <div className="result">
+      <pre>{JSON.stringify(apiResponse, null, 2)}</pre>
+    </div>
+  )}
+</section>
           {error && (
             <div className="error">
               <strong>Error:</strong> {error}

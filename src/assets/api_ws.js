@@ -1,7 +1,7 @@
 class WSClient {
     constructor(url, callbacks) {
         this.url = url;
-        this.timer = null
+        this.timer = null;
         this.callbacks = callbacks;
         this.ws = null;
         this.reconnectAttempts = 0;
@@ -73,7 +73,7 @@ class WSClient {
 
         this.timer = setTimeout(() => {
             this.reconnectAttempts++;
-            console.error("try reconnect connect", this.reconnectAttempts)
+            console.log("try reconnect connect", this.reconnectAttempts)
             this.connect();
             this.timer = null;
         }, delay);
@@ -207,15 +207,10 @@ class State {
     }
 }
 class APIClient {
-    constructor() {
-       const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
-    const wsProtocol = backendUrl.startsWith('https') ? 'wss' : 'ws'; // Auto-secure for prod
-    const url = new URL(backendUrl);
-    this.hostport = url.host; // e.g., 'node.wartscan.io' or 'localhost:3000'
-    this.ws = new WebSocket(`${wsProtocol}://${this.hostport}/stream`);
-    this.ws.onopen = () => console.log('WS connected');
-    this.ws.onerror = (err) => console.error('WS error:', err); // Better logging for debug
-    this.ws.onclose = () => console.log('WS closed');
+    constructor(backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000') {  // Made backendUrl a param for flexibility
+        const wsProtocol = backendUrl.startsWith('https') ? 'wss' : 'ws';
+        const url = new URL(backendUrl);
+        this.hostport = url.host; // e.g., 'node.wartscan.io' or 'localhost:3000'
         this.setters = null;
         this.state = new State();
         this.notifyChange = (key) => {
@@ -237,7 +232,7 @@ class APIClient {
                 }
             }
         };
-        this.wsClient = new WSClient('ws://' + this.hostport + '/stream', {
+        this.wsClient = new WSClient(`${wsProtocol}://${this.hostport}/stream`, {  // Fixed to use wsProtocol here
             onOpen: () => {
                 this.subscribe('connection');
                 this.subscribe('chain');
