@@ -11,7 +11,22 @@ export default defineConfig({
         target: 'http://localhost:8888/.netlify/functions',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/proxy/, '/proxy'),
-      }},
+      },
+      '/stream': {  // Proxy /stream to remote WS
+        target: 'wss://warthognode.duckdns.org',
+        ws: true,
+        changeOrigin: true,
+        secure: true,  // For wss
+        rewrite: (path) => path.replace(/^\/stream/, '/stream'),
+      },
+      '/ws/chain_delta': {  // Same for chain_delta if needed
+        target: 'wss://warthognode.duckdns.org',
+        ws: true,
+        changeOrigin: true,
+        secure: true,
+        rewrite: (path) => path.replace(/^\/ws\/chain_delta/, '/ws/chain_delta'),
+      },
+    },
     headers: {
       'Cross-Origin-Opener-Policy': 'same-origin',
       'Cross-Origin-Embedder-Policy': 'require-corp',
