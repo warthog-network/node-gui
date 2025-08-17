@@ -552,6 +552,7 @@ useEffect(() => {
 }, []);
 
   return (
+    <div className='p-6'>
     <div className="container">
       <h1>Warthog Wallet</h1>
 {supportsPWA && (
@@ -1005,6 +1006,7 @@ useEffect(() => {
           </div>
         </div>
       )}
+    </div>
     </div>
   );
 };

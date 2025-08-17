@@ -3,7 +3,7 @@ function Peers({ client, connections }) {
     return (
         <div className="flex container flex-col h-full">
             <H1>Peers</H1>
-            <div className="text-left h-full overflow-y-scroll px-2">
+            <div className="text-left h-dvh overflow-y-scroll px-2">
                 <table className="min-w-full divide-y divide-gray-200 dark:divide-yellow-700">
                     <thead>
                         <tr>

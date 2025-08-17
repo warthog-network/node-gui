@@ -58,8 +58,8 @@ function Overview({ chain, connections, client }) {
     }
 
     return (
-        <div className="p-6 container min-h-screen relative overflow-hidden">
-            <H1 className="text-center mb-8 text-4xl font-bold text-gray-800 dark:text-white relative z-10">Overview</H1>
+        <div className="p-6 container min-h-screen overflow-hidden h-full">
+            <H1 className="text-center text-4xl font-bold text-gray-800 dark:text-white relative z-10">Overview</H1>
             <div className="relative mx-auto w-[400px] h-[400px] max-w-full aspect-square mt-20">
                 <div className="absolute inset-0 animate-rotate-slow">
                     <div className="absolute top-0 left-1/2 w-64 h-64 -translate-x-1/2 -translate-y-1/2">

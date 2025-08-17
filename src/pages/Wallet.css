@@ -1,13 +1,13 @@
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Press+Start+2P&family=Orbitron:wght@400;700&family=Roboto:wght@400;500&display=swap');
 
 .container {
-  max-width: 800px;
+
   margin: 0 auto;
 background: radial-gradient(circle at 24.1% 68.8%, rgb(50, 50, 50) 0%, rgb(0, 0, 0) 99.4%);
   color: #FFFFFF;
   font-family: 'Roboto', sans-serif;
-  padding: 20px;
-  min-height: 100vh;
+  padding: 35px;
+ 
   border-radius: 3rem;
  
 

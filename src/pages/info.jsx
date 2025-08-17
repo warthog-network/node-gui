@@ -17,7 +17,7 @@ function Info({ client }) {
     )
     if (info) {
         return (
-            <div className=''>
+            <div className='h-screen container'>
                 <H1>Info</H1>
             <p> Node version: {info.version.name} </p>
             <p> Uptime: {info.uptime.formatted} </p>

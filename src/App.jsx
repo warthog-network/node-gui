@@ -22,6 +22,7 @@ function App() {
     const [connections, setConnections] = useState([]);
     const [log, setLog] = useState([]);
     const [chain, setChain] = useState(null);
+    const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
 
     useEffect(() => {
         globalClient.setters = {
@@ -37,9 +38,14 @@ function App() {
     if (subscribed && chain) {
         return (
             <div className="inline">
-                <Sidebar connections={connections} chain={chain} />
+                <Sidebar 
+                    connections={connections} 
+                    chain={chain} 
+                    isExpanded={isSidebarExpanded}
+                    setIsExpanded={setIsSidebarExpanded}
+                />
 
-                <div className="top-0 ml-56 bg-yellow-50 h-dvh p-5">
+                <div className={`top-0 ${isSidebarExpanded ? 'ml-56' : 'ml-16'} bg-yellow-50 p-5 transition-all duration-300 ease-in-out`}>
                     <Routes>
                         <Route path="/" element={<Overview connections={connections} chain={chain} client={client} />} />
                         <Route path="/overview" element={<Overview connections={connections} chain={chain} client={client} />} />

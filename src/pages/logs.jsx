@@ -21,7 +21,7 @@ function Logs({ log }) {
     }
 
     return (
-        <div className="flex flex-col h-full">
+        <div className="flex container flex-col h-dvh">
             <H1>Logs</H1>
             <h2 className="mb-2 text-2xl font-semibold leading-none tracking-tight text-gray-800 md:text-3xl lg:text-4xl">Latest logs</h2>
             <div className="text-left h-full overflow-y-scroll px-2  bg-black text-white" onScroll = {onScrolled} ref={scrollableRef}>
