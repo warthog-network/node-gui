@@ -1,4 +1,5 @@
 import { useParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { H1 } from '@/components/misc.jsx';
 import { format_height, abbreviate } from '@/util.js';
@@ -13,12 +14,12 @@ function TransactionItem({ tx, index }) {
           {isRewardTx ? `Miner Reward - ${abbreviate(tx.txHash)}` : abbreviate(tx.txHash)}
         </span>
         {tx.txHash && (
-          <a
-            href={`/transaction/lookup/${tx.txHash}`}
+          <Link
+            to={`/transaction/lookup/${tx.txHash}`}
             className="text-sm text-zinc-600 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200"
           >
             View Details
-          </a>
+          </Link>
         )}
       </div>
       {tx.fromAddress && (
@@ -140,12 +141,12 @@ function BlockDetails({ client, chain }) {
           )}
         </div>
       </div>
-      <a
-        href="/explorer"
+      <Link
+        to="/explorer"
         className="mt-6 inline-flex items-center px-4 py-2 text-sm font-medium text-zinc-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:ring-4 focus:outline-none focus:ring-gray-200 transition-colors duration-200 dark:bg-gray-800 dark:text-zinc-300 dark:border-gray-600 dark:hover:bg-gray-700 dark:focus:ring-gray-700"
       >
         ← Back to Explorer
-      </a>
+      </Link>
     </div>
   );
 }

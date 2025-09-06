@@ -1,4 +1,6 @@
+
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import ChartComponent from '@/components/ChartComponent.jsx';
 import { H1 } from '@/components/misc.jsx';
 import { format_height, abbreviate } from '@/util.js';
@@ -196,17 +198,29 @@ function Explorer({ client, chain }) {
                                         </div>
                                     </dl>
                                 </div>
-                                <div className="px-4 py-3 border-t border-gray-200 dark:border-gray-700">
-                                    <a
-                                        href={`/chain/block/${block.height}`}
-                                        className="inline-flex items-center w-full justify-center px-4 py-2 text-sm font-medium text-white bg-zinc-700 rounded-lg hover:bg-zinc-800 focus:ring-4 focus:outline-none focus:ring-zinc-300 transition-colors duration-200 dark:bg-zinc-600 dark:hover:bg-zinc-700 dark:focus:ring-zinc-800"
-                                    >
-                                        Details
-                                        <svg className="rtl:rotate-180 w-3.5 h-3.5 ml-2" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">
-                                            <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M1 5h12m0 0L9 1m4 4L9 9" />
-                                        </svg>
-                                    </a>
-                                </div>
+                               <div className="px-4 py-3 border-t border-gray-200 dark:border-gray-700">
+  <Link
+    to={`/chain/block/${block.height}`}
+    className="inline-flex items-center w-full justify-center px-4 py-2 text-sm font-medium text-white bg-zinc-700 rounded-lg hover:bg-zinc-800 focus:ring-4 focus:outline-none focus:ring-zinc-300 transition-colors duration-200 dark:bg-zinc-600 dark:hover:bg-zinc-700 dark:focus:ring-zinc-800"
+  >
+    Details
+    <svg
+      className="rtl:rotate-180 w-3.5 h-3.5 ml-2"
+      aria-hidden="true"
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 14 10"
+    >
+      <path
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="2"
+        d="M1 5h12m0 0L9 1m4 4L9 9"
+      />
+    </svg>
+  </Link>
+</div>
                             </div>
                         ))}
                     </div>
