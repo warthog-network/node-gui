@@ -72,7 +72,6 @@ function Sidebar({ chain, connections, isExpanded, setIsExpanded }) {
                                     </svg>
                                 </span>
                                 {isExpanded && <span className="mx-2 text-sm tracking-wide truncate">Wallet</span>}
-                                {isExpanded && <span className="px-2 py-0.5 ml-auto text-xs font-medium tracking-wide text-yellow-600">Soon</span>}
                             </span>
                         </Link>
                     </li>
