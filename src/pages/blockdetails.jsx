@@ -130,6 +130,13 @@ function BlockDetails({ client, chain }) {
         </div>
         <div className="px-6 py-4">
           <h3 className="mb-3 text-xl font-semibold text-gray-900 dark:text-white">Transactions</h3>
+          <div className="flex justify-end mb-2">
+            
++            <Link to={`/block/${block.height}/hex`} 
+              className="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
++              Show binary
++            </Link>
++          </div>
           {block.transactions?.length > 0 ? (
             <ul className="space-y-3">
               {block.transactions.map((tx, index) => (

@@ -124,22 +124,7 @@ function Overview({ chain, connections, client }) {
                     </div>
                 </div>
             </div>
-            <style jsx>{`
-                @keyframes rotate-slow {
-                    0% { transform: rotate(0deg); }
-                    100% { transform: rotate(360deg); }
-                }
-                .animate-rotate-slow {
-                    animation: rotate-slow 30s linear infinite;
-                }
-                @keyframes counter-rotate {
-                    0% { transform: rotate(0deg); }
-                    100% { transform: rotate(-360deg); }
-                }
-                .animate-counter-rotate {
-                    animation: counter-rotate 30s linear infinite;
-                }
-            `}</style>
+ 
         </div>
     );
 }

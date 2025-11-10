@@ -7,6 +7,7 @@ import Explorer from './pages/explorer.jsx';
 import Logs from './pages/logs.jsx';
 import TransactionDetails from './pages/TransactionDetails.jsx'
 import BlockDetails from './pages/blockdetails.jsx';
+import BlockHexView from './pages/block/[height]/hex';
 import Info from './pages/info.jsx';
 import APIClient from './assets/api_ws.js';
 import Wallet from './pages/Wallet.jsx';
@@ -50,6 +51,7 @@ function App() {
                         <Route path="/" element={<Overview connections={connections} chain={chain} client={client} />} />
                         <Route path="/overview" element={<Overview connections={connections} chain={chain} client={client} />} />
                         <Route path="/explorer" element={<Explorer client={client} chain={chain} />} />
+                        <Route path="/block/:height/hex" element={<BlockHexView client={client} chain={chain}/>} />
                         <Route path="/peers" element={<Peers client={client} connections={connections} />} />
                         <Route path="/logs" element={<Logs log={log} />} />
                         <Route path="/info" element={<Info client={client} />} />
