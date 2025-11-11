@@ -60,6 +60,15 @@ export default function BlockHexView({ client }) {
             breadcrumbsRef.current.textContent = list.join(' 〉 ');
           }
         });
+
+        span.addEventListener('click', (e) => {
+          const textToCopy = span.textContent + ' ' + breadcrumbsRef.current.textContent;
+          navigator.clipboard.writeText(textToCopy).then(() => {
+            alert('Copied to clipboard!');
+          }).catch(err => {
+            console.error('Failed to copy: ', err);
+          });
+        });
       } else {
         process_children(hex, span, child.children);
       }
@@ -108,15 +117,15 @@ export default function BlockHexView({ client }) {
   }, [height, client]);
 
   return (
-    <div className="container mx-auto px-4 py-8 relative"> {/* Add relative for positioning */}
-      <h1 className="text-3xl font-bold mb-4">
+    <div className="container mx-auto px-5 py-8 relative"> {/* Add relative for positioning */}
+      <h1 className="text-3xl font-bold mb-4 py-2">
         Block {height} – Raw Binary View
       </h1>
+
       <div
         ref={breadcrumbsRef}
-        className="absolute top-16 right-4 mb-4 text-sm font-mono text-gray-600 dark:text-gray-400 min-h-[1.5em] bg-white dark:bg-gray-800 p-2 rounded shadow-lg z-10"
+        className="right-4 top-16 text-sm font-mono text-gray-600 dark:text-gray-400 min-h-[1.5em] bg-white dark:bg-gray-800 p-3 rounded shadow-lg z-10"
       />
-      
 
       {loading && <p className="text-gray-600">Loading binary data...</p>}
       {error && (
@@ -124,7 +133,7 @@ export default function BlockHexView({ client }) {
           <strong>Error:</strong> {error}
         </div>
       )}
-      <div className="overflow-y-auto h-96 mb-4 " > {/* Wrapper for scroll */}
+      <div className="overflow-y-auto h-96 mb-8 mt-8" > {/* Wrapper for scroll */}
         <code
           ref={containerRef}
           className="block w-full font-mono text-xs bg-gray-50 dark:bg-gray-800 p-4 rounded border border-gray-200 dark:border-gray-700"
