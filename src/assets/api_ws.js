@@ -104,7 +104,8 @@ class Block {
 
   reward() {
     const tx = this.reward_tx();
-    return tx?.amount?.toString() || '0';
+    const amount = tx?.amount;
+    return amount?.str || '0';
   }
 
   get transactions() {

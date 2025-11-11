@@ -85,12 +85,12 @@ function TransactionDetails({ client }) {
             )}
             <div>
               <dt className="font-medium text-gray-500 uppercase">Amount</dt>
-              <dd className="mt-1 text-gray-800 dark:text-neutral-200">{transaction.amount ?? 'N/A'} (E8: {transaction.amountE8 ?? 'N/A'})</dd>
+              <dd className="mt-1 text-gray-800 dark:text-neutral-200">{transaction.amount?.str ?? 'N/A'} (E8: {transaction.amount?.E8 ?? 'N/A'})</dd>
             </div>
             {transaction.fee && (
               <div>
                 <dt className="font-medium text-gray-500 uppercase">Fee</dt>
-                <dd className="mt-1 text-gray-800 dark:text-neutral-200">{transaction.fee} (E8: {transaction.feeE8 ?? 'N/A'})</dd>
+                <dd className="mt-1 text-gray-800 dark:text-neutral-200">{transaction.fee?.str ?? 'N/A'} (E8: {transaction.fee?.E8 ?? 'N/A'})</dd>
               </div>
             )}
             {transaction.blockHeight && (
