@@ -57,7 +57,7 @@ export default function BlockHexView({ client }) {
             cur = cur.parentElement;
           }
           if (breadcrumbsRef.current) {
-            breadcrumbsRef.current.textContent = list.join(' > ');
+            breadcrumbsRef.current.textContent = list.join(' 〉 ');
           }
         });
       } else {
@@ -108,39 +108,46 @@ export default function BlockHexView({ client }) {
   }, [height, client]);
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 relative"> {/* Add relative for positioning */}
       <h1 className="text-3xl font-bold mb-4">
         Block {height} – Raw Binary View
       </h1>
-
       <div
         ref={breadcrumbsRef}
-        className="mb-4 text-sm font-mono text-gray-600 dark:text-gray-400 min-h-[1.5em]"
+        className="absolute top-16 right-4 mb-4 text-sm font-mono text-gray-600 dark:text-gray-400 min-h-[1.5em] bg-white dark:bg-gray-800 p-2 rounded shadow-lg z-10"
       />
+      
 
       {loading && <p className="text-gray-600">Loading binary data...</p>}
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded mb-4">
+        <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded mb-4 ">
           <strong>Error:</strong> {error}
         </div>
       )}
-
-      <code
-        ref={containerRef}
-        className="block w-full overflow-x-auto font-mono text-xs bg-gray-50 dark:bg-gray-800 p-4 rounded border border-gray-200 dark:border-gray-700"
-        style={{ whiteSpace: 'pre' }}
-      />
+      <div className="overflow-y-auto h-96 mb-4 " > {/* Wrapper for scroll */}
+        <code
+          ref={containerRef}
+          className="block w-full font-mono text-xs bg-gray-50 dark:bg-gray-800 p-4 rounded border border-gray-200 dark:border-gray-700"
+          style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}
+        />
+      </div>
 
       <Link
         to={`/chain/block/${height}`}
-        className="mt-6 inline-block text-sm text-blue-600 hover:underline"
+        className="mt-6 inline-flex items-center px-4 py-2 text-sm font-medium text-zinc-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:ring-4 focus:outline-none focus:ring-gray-200 transition-colors duration-200 dark:bg-gray-800 dark:text-zinc-300 dark:border-gray-600 dark:hover:bg-gray-700 dark:focus:ring-gray-700"
       >
         Back to Block Details
       </Link>
 
-      <style>
-        {`.leaf:hover { background: yellow !important; outline: 1px solid black; }`}
-      </style>
+      <style jsx>{`
+        .leaf:hover {
+          background: gray !important;
+          outline: 1px solid black;
+        }
+        .leaf {
+          cursor: pointer;
+        }
+      `}</style>
     </div>
   );
 }
