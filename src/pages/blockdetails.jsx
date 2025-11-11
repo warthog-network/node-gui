@@ -7,11 +7,30 @@ import { Block } from '@/assets/api_ws.js';  // Assuming the import path is corr
 
 function TransactionItem({ tx, index }) {
   const isRewardTx = !tx.fromAddress; // Rewards lack fromAddress; transfers have it
+   
+  
+  // ---- SAFE STRING HELPERS ----
+  const safeStr = (val) => {
+    if (val === null || val === undefined) return '—';
+    if (typeof val === 'string') return val;
+    if (typeof val === 'number') return val.toString();
+    if (typeof val === 'bigint') return val.toString();
+    if (val && typeof val === 'object') {
+      // BigInt wrapper from the backend
+      if ('E8' in val && 'str' in val) return val.str;
+      // Fallback – JSON stringify (never renders raw object)
+      return JSON.stringify(val);
+    }
+    return String(val);
+  };
+
   return (
     <li key={tx.txHash || `tx-${index}`} className="bg-gray-50 p-3 rounded-lg dark:bg-gray-700">
       <div className="flex justify-between items-center">
         <span className="text-sm font-medium text-gray-800 dark:text-neutral-200 break-all">
-          {isRewardTx ? `Miner Reward - ${abbreviate(tx.txHash)}` : abbreviate(tx.txHash)}
+                   {isRewardTx
+            ? `Miner Reward - ${abbreviate(safeStr(tx.txHash))}`
+            : abbreviate(safeStr(tx.txHash))}
         </span>
         {tx.txHash && (
           <Link
@@ -22,24 +41,24 @@ function TransactionItem({ tx, index }) {
           </Link>
         )}
       </div>
-      {tx.fromAddress && (
+      {tx.fromAddress && safeStr(tx.fromAddress) !== '—' && (
         <div className="mt-1 text-xs text-gray-600 dark:text-neutral-400">
-          From: {abbreviate(tx.fromAddress)}
+          From: {abbreviate(safeStr(tx.fromAddress))}
         </div>
       )}
-      {tx.toAddress && (
+      {tx.toAddress && safeStr(tx.toAddress) !== '—' && (
         <div className="mt-1 text-xs text-gray-600 dark:text-neutral-400">
-          To: {abbreviate(tx.toAddress)}
+         To: {abbreviate(safeStr(tx.toAddress))}
         </div>
       )}
-      {tx.amount && (
+      {tx.amount && safeStr(tx.amount) !== '—' && (
         <div className="mt-1 text-xs text-gray-600 dark:text-neutral-400">
-          Amount: {tx.amount}
+          Amount: {safeStr(tx.amount)}
         </div>
       )}
-      {tx.fee && (
+      {tx.fee && safeStr(tx.fee) !== '—' && (
         <div className="mt-1 text-xs text-gray-600 dark:text-neutral-400">
-          Fee: {tx.fee}
+         Fee: {safeStr(tx.fee)}
         </div>
       )}
     </li>

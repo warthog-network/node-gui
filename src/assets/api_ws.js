@@ -82,28 +82,52 @@ class ConnectionState {
         this.connections = this.connections.filter(item => item.id !== id);
     }
 }
-
+// src/assets/api_ws.js
 class Block {
-    constructor(data) {
-        Object.assign(this, data);
-    }
-    reward_tx() {
-        return this.body.rewards[0];
-    }
-    miner() {
-        return this.reward_tx().toAddress
-    }
-    transactionCount() {
-        return this.body.transfers.length + 1
-    }
-    reward() {
-        return this.reward_tx().amount;
-    }
-    get transactions() {
-        return [this.reward_tx(), ...this.body.transfers];
-    }
-}
+  constructor(data) {
+    Object.assign(this, data);
+    // --- Normalise everything ---
+    this.body = this.body || {};
+    this.body.rewards = Array.isArray(this.body.rewards) ? this.body.rewards : [];
+    this.body.transfers = Array.isArray(this.body.transfers) ? this.body.transfers : [];
+    this.header = this.header || {};
+  }
 
+  reward_tx() {
+    return this.body.rewards[0] || null;
+  }
+
+  miner() {
+    const tx = this.reward_tx();
+    return tx?.toAddress || 'unknown';
+  }
+
+  reward() {
+    const tx = this.reward_tx();
+    return tx?.amount?.toString() || '0';
+  }
+
+  get transactions() {
+    const rewardTx = this.reward_tx();
+    const txs = [];
+    if (rewardTx) txs.push(rewardTx);
+    txs.push(...this.body.transfers);
+    return txs;
+  }
+
+  transactionCount() {
+    return this.transactions.length;
+  }
+
+  // --- Safe string fields ---
+  get headerHash() {
+    return typeof this.header.hash === 'string' ? this.header.hash : '—';
+  }
+
+  get heightStr() {
+    return this.height?.toString() || '—';
+  }
+}
 class ChainState {
     constructor(apiClient) {
         this.apiClient = apiClient; // Reference to APIClient for fetching hashrate

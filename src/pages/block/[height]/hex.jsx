@@ -1,33 +1,41 @@
 // src/pages/block/[height]/hex.jsx
 import { useParams, Link } from 'react-router-dom';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
-export default function BlockHexView({ client, chain }) {
-  const { height } = useParams();               // <-- dynamic segment
+export default function BlockHexView({ client }) {
+  const { height } = useParams();
   const containerRef = useRef(null);
   const breadcrumbsRef = useRef(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // -----------------------------------------------------------------
-  // Load the JSON once per mount (or when height changes)
-  // -----------------------------------------------------------------
   useEffect(() => {
-    async function loadHex() {
+    async function loadBinary() {
       try {
-        const resp = await fetch('/block-binary.json');
-        if (!resp.ok) throw new Error('Failed to load block-binary.json');
-        const { data } = await resp.json();
-        process_tree(data);
-      } catch (err) {
-        console.error(err);
-        if (containerRef.current) {
-          containerRef.current.textContent = 'Error loading binary data.';
+        setLoading(true);
+        setError(null);
+
+        // 1. Fetch from real API
+        const response = await client.get(`/chain/block/${height}/binary`);
+
+        // 2. Extract { bytes, structure } from response.data
+        const apiData = response?.data;
+        if (!apiData?.bytes || !Array.isArray(apiData.structure)) {
+          throw new Error('Invalid response: missing bytes or structure in data');
         }
+
+        process_tree(apiData); // ← pass { bytes, structure }
+      } catch (err) {
+        console.error('Failed to load block binary:', err);
+        setError(err.message || 'Failed to load binary data');
+      } finally {
+        setLoading(false);
       }
     }
 
-    // -----------------------------------------------------------------
-    // All functions copied verbatim from your co-dev’s instructions
-    // -----------------------------------------------------------------
+    // ——————————————————————————————————————————————
+    // Hover-breadcrumb logic (unchanged)
+    // ——————————————————————————————————————————————
     function process_child(hex, parentNode, child, childIndex) {
       const span = document.createElement('span');
       parentNode.appendChild(span);
@@ -36,8 +44,7 @@ export default function BlockHexView({ client, chain }) {
       span.tag = child.tag;
       span.index = childIndex;
 
-      const children = child.children;
-      if (children.length === 0) {
+      if (child.children.length === 0) {
         span.textContent = hex.substring(2 * child.offsetBegin, 2 * child.offsetEnd);
         span.classList.add('leaf');
 
@@ -54,7 +61,7 @@ export default function BlockHexView({ client, chain }) {
           }
         });
       } else {
-        process_children(hex, span, children);
+        process_children(hex, span, child.children);
       }
     }
 
@@ -97,43 +104,43 @@ export default function BlockHexView({ client, chain }) {
       process_children(hex, container, structure);
     }
 
-    loadHex();
-  }, [height]); // re-run if the block height ever changes
+    loadBinary();
+  }, [height, client]);
 
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-4">
-        Block {height} – Raw Hex View
+        Block {height} – Raw Binary View
       </h1>
 
-      {/* Breadcrumb navigation */}
       <div
         ref={breadcrumbsRef}
         className="mb-4 text-sm font-mono text-gray-600 dark:text-gray-400 min-h-[1.5em]"
       />
 
-      {/* Hex dump */}
+      {loading && <p className="text-gray-600">Loading binary data...</p>}
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded mb-4">
+          <strong>Error:</strong> {error}
+        </div>
+      )}
+
       <code
         ref={containerRef}
         className="block w-full overflow-x-auto font-mono text-xs bg-gray-50 dark:bg-gray-800 p-4 rounded border border-gray-200 dark:border-gray-700"
         style={{ whiteSpace: 'pre' }}
       />
 
-      {/* Back link */}
- <Link
-  to={`/chain/block/${height}`}
-  className="mt-6 inline-block text-sm text-blue-600 hover:underline"
->
-  Back to Block Details
-</Link>
+      <Link
+        to={`/chain/block/${height}`}
+        className="mt-6 inline-block text-sm text-blue-600 hover:underline"
+      >
+        Back to Block Details
+      </Link>
 
-      {/* Hover style for leaf nodes */}
-      <style jsx>{`
-        .leaf:hover {
-          background: yellow !important;
-          outline: 1px solid black;
-        }
-      `}</style>
+      <style>
+        {`.leaf:hover { background: yellow !important; outline: 1px solid black; }`}
+      </style>
     </div>
   );
 }
